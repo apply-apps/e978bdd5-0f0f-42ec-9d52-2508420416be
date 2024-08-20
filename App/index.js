@@ -1,53 +1,100 @@
-import React, { useEffect, useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+// Filename: index.js
+// Combined code from all files
+import React, { useState } from 'react';
+import { SafeAreaView, StyleSheet, Text, TextInput, Button, ScrollView, View, ActivityIndicator } from 'react-native';
+import axios from 'axios';
 
-const App = () => {
-  const fullText = 'Hi, this is Apply.\nCreating mobile apps is now as simple as typing text.\nJust input your idea and press APPLY, and our platform does the rest...';
-  const [displayedText, setDisplayedText] = useState('');
-  const [index, setIndex] = useState(0);
-  const [isPaused, setIsPaused] = useState(false);
+const API_URL = 'http://apihub.p.appply.xyz:3300/chatgpt';
 
-  useEffect(() => {
-    if (isPaused) return;
+export default function App() {
+  const [heroes, setHeroes] = useState('');
+  const [villains, setVillains] = useState('');
+  const [plot, setPlot] = useState('');
+  const [story, setStory] = useState('');
+  const [loading, setLoading] = useState(false);
 
-    const interval = setInterval(() => {
-      setDisplayedText((prev) => prev + fullText[index]);
-      setIndex((prev) => {
-        if (prev === fullText.length - 1) {
-          setIsPaused(true);
-          setTimeout(() => {
-            setDisplayedText('');
-            setIndex(0);
-            setIsPaused(false);
-          }, 2000);
-          return 0;
-        }
-        return prev + 1;
+  const generateStory = async () => {
+    setLoading(true);
+    try {
+      const response = await axios.post(API_URL, {
+        messages: [
+          { role: "system", content: "You are a helpful assistant. Please generate a fairy tale for children." },
+          { role: "user", content: `Create a story with heroes: ${heroes}, villains: ${villains}, and plot: ${plot}` },
+        ],
+        model: "gpt-4o"
       });
-    }, 100);
 
-    return () => clearInterval(interval);
-  }, [index, isPaused]);
+      const { data } = response;
+      setStory(data.response);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.text}>{displayedText}</Text>
-    </View>
+    <SafeAreaView style={styles.container}>
+      <ScrollView contentContainerStyle={styles.scrollContainer}>
+        <Text style={styles.title}>Fairy Tale Generator</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="Enter heroes"
+          value={heroes}
+          onChangeText={setHeroes}
+        />
+        <TextInput
+          style={styles.input}
+          placeholder="Enter villains"
+          value={villains}
+          onChangeText={setVillains}
+        />
+        <TextInput
+          style={styles.input}
+          placeholder="Enter plot"
+          value={plot}
+          onChangeText={setPlot}
+        />
+        <Button title="Generate Story" onPress={generateStory} />
+        {loading ? <ActivityIndicator size="large" color="#0000ff" /> : (
+          <View style={styles.storyContainer}>
+            <Text style={styles.story}>{story}</Text>
+          </View>
+        )}
+      </ScrollView>
+    </SafeAreaView>
   );
-};
+}
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
-    backgroundColor: 'black',
-    padding: 20,
+    backgroundColor: '#f5f5f5',
   },
-  text: {
-    color: 'white',
+  scrollContainer: {
+    padding: 16,
+    paddingTop: 50,
+  },
+  title: {
     fontSize: 24,
-    fontFamily: 'monospace',
+    fontWeight: 'bold',
+    marginBottom: 16,
+    textAlign: 'center',
+  },
+  input: {
+    height: 40,
+    borderColor: '#ccc',
+    borderWidth: 1,
+    paddingHorizontal: 10,
+    marginBottom: 12,
+    borderRadius: 4,
+    backgroundColor: '#fff',
+  },
+  storyContainer: {
+    marginTop: 20,
+  },
+  story: {
+    fontSize: 16,
+    lineHeight: 24,
   },
 });
-
-export default App;
