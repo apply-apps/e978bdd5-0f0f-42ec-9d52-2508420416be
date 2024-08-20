@@ -1,33 +1,45 @@
 // Filename: index.js
 // Combined code from all files
+
 import React, { useState } from 'react';
-import { SafeAreaView, StyleSheet, Text, TextInput, Button, ScrollView, View, ActivityIndicator } from 'react-native';
+import { SafeAreaView, StyleSheet, Text, TextInput, Button, ScrollView, View, ActivityIndicator, Alert } from 'react-native';
 import axios from 'axios';
 
 const API_URL = 'http://apihub.p.appply.xyz:3300/chatgpt';
 
 export default function App() {
-  const [heroes, setHeroes] = useState('');
-  const [villains, setVillains] = useState('');
-  const [plot, setPlot] = useState('');
-  const [story, setStory] = useState('');
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [donation, setDonation] = useState('');
+  const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const generateStory = async () => {
+  const handleDonate = async () => {
     setLoading(true);
     try {
       const response = await axios.post(API_URL, {
         messages: [
-          { role: "system", content: "You are a helpful assistant. Please generate a fairy tale for children." },
-          { role: "user", content: `Create a story with heroes: ${heroes}, villains: ${villains}, and plot: ${plot}` },
+          {
+            role: "system",
+            content: "You are a helpful assistant. Please respond to crowdfunding donations."
+          },
+          {
+            role: "user",
+            content: `Donation Inquiry Details:\nName: ${name}\nEmail: ${email}\nDonation: ${donation}\nMessage: ${message}`
+          }
         ],
         model: "gpt-4o"
       });
 
       const { data } = response;
-      setStory(data.response);
+      Alert.alert('Thank You!', `Your donation inquiry has been received:\n${data.response}`);
+      setName('');
+      setEmail('');
+      setDonation('');
+      setMessage('');
     } catch (error) {
       console.error(error);
+      Alert.alert('Error', 'There was an error processing your donation.');
     } finally {
       setLoading(false);
     }
@@ -36,31 +48,36 @@ export default function App() {
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContainer}>
-        <Text style={styles.title}>Fairy Tale Generator</Text>
+        <Text style={styles.title}>Dog Food Crowdfunding</Text>
         <TextInput
           style={styles.input}
-          placeholder="Enter heroes"
-          value={heroes}
-          onChangeText={setHeroes}
+          placeholder="Your Name"
+          value={name}
+          onChangeText={setName}
         />
         <TextInput
           style={styles.input}
-          placeholder="Enter villains"
-          value={villains}
-          onChangeText={setVillains}
+          placeholder="Your Email"
+          value={email}
+          onChangeText={setEmail}
         />
         <TextInput
           style={styles.input}
-          placeholder="Enter plot"
-          value={plot}
-          onChangeText={setPlot}
+          placeholder="Donation Amount"
+          keyboardType="numeric"
+          value={donation}
+          onChangeText={setDonation}
         />
-        <Button title="Generate Story" onPress={generateStory} />
-        {loading ? <ActivityIndicator size="large" color="#0000ff" /> : (
-          <View style={styles.storyContainer}>
-            <Text style={styles.story}>{story}</Text>
-          </View>
-        )}
+        <TextInput
+          style={styles.messageInput}
+          placeholder="Message"
+          value={message}
+          onChangeText={setMessage}
+          multiline={true}
+          numberOfLines={4}
+        />
+        <Button title="Donate" onPress={handleDonate} />
+        {loading && <ActivityIndicator size="large" color="#0000ff" />}
       </ScrollView>
     </SafeAreaView>
   );
@@ -90,11 +107,13 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     backgroundColor: '#fff',
   },
-  storyContainer: {
-    marginTop: 20,
-  },
-  story: {
-    fontSize: 16,
-    lineHeight: 24,
+  messageInput: {
+    borderColor: '#ccc',
+    borderWidth: 1,
+    paddingHorizontal: 10,
+    marginBottom: 12,
+    borderRadius: 4,
+    backgroundColor: '#fff',
+    textAlignVertical: 'top',
   },
 });
